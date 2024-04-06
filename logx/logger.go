@@ -17,6 +17,13 @@ type logger struct {
 	atomicLevel *zap.AtomicLevel
 }
 
+func newLogger(lg *zap.Logger, atomicLevel *zap.AtomicLevel) *logger {
+	return &logger{
+		zapLogger:   lg,
+		atomicLevel: atomicLevel,
+	}
+}
+
 func (l *logger) Info(message string, fields ...zap.Field) {
 	l.zapLogger.Info(message, fields...)
 }
