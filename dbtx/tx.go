@@ -60,14 +60,22 @@ func persist(ctx context.Context, err error) {
 }
 
 func ReplaceTxPersist(ctx context.Context) (context.Context, func(err error)) {
-	return withTxPersist(ctx, true)
+	return withTxPersist(ctx, true, nil)
+}
+
+func ReplaceTxPersistCustom(ctx context.Context, getTx func() TX) (context.Context, func(err error)) {
+	return withTxPersist(ctx, true, getTx)
 }
 
 func WithTXPersist(ctx context.Context) (context.Context, func(err error)) {
-	return withTxPersist(ctx, false)
+	return withTxPersist(ctx, false, nil)
 }
 
-func withTxPersist(ctx context.Context, forceReplace bool) (context.Context, func(err error)) {
+func WithTxPersistCustom(ctx context.Context, getTx func() TX) (context.Context, func(err error)) {
+	return withTxPersist(ctx, false, getTx)
+}
+
+func withTxPersist(ctx context.Context, forceReplace bool, forceGetTx func() TX) (context.Context, func(err error)) {
 	t0 := Tx(ctx)
 	if t0 != nil && !forceReplace {
 		return ctx, func(err error) {
@@ -75,7 +83,14 @@ func withTxPersist(ctx context.Context, forceReplace bool) (context.Context, fun
 		}
 	}
 
-	tx := getTxOp()
+	var tx TX
+
+	if forceGetTx != nil {
+		tx = forceGetTx()
+	} else {
+		tx = getTxOp()
+	}
+
 	ctx = WithTx(ctx, tx)
 	return ctx, func(ctx context.Context) func(err error) {
 		return func(err error) {
