@@ -15,3 +15,17 @@ cachex：多级缓存。本地缓存可配置使用不同的开源库，中心�
 responsor: 各种情况下返回gin或grpc请求的方法合集。
 
 middlewares：一些公共的中间件
+
+## proto生成器
+
+gin
+
+grpc
+
+openapi
+
+validate
+
+## 其他生成器
+
+gorm-gen.yaml
