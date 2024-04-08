@@ -1,5 +1,23 @@
 package configx
 
+import (
+	"github.com/spf13/viper"
+	"os"
+)
+
+var (
+	ConfigTypeEnvKey = "CONFIG_TYPE"
+	RootConfigPath   = "config/local/config.yaml"
+)
+
+func SetConfigTypeEnvKey(key string) {
+	ConfigTypeEnvKey = key
+}
+
+func SetRootConfigPath(path string) {
+	RootConfigPath = path
+}
+
 type Config struct {
 	System           *SystemConfig        `yaml:"system"`
 	SubConfig        map[string]SubConfig `yaml:"subConfig"`
@@ -34,4 +52,28 @@ type ComponentLoadConfig struct {
 	Disable   bool   `yaml:"disable"`
 	StoreKey  string `yaml:"storeKey"`
 	ConfigKey string `yaml:"configKey"`
+}
+
+func Load(value any) error {
+	configType := os.Getenv(ConfigTypeEnvKey)
+
+	switch configType {
+	case "ETCD":
+		return loadFromEtcd(value)
+	default:
+		return loadFromYaml(value)
+	}
+}
+
+func loadFromYaml(value any) error {
+	v := viper.New()
+	v.SetConfigFile(RootConfigPath)
+	v.SetConfigType("yaml")
+	v.ReadInConfig()
+	err := v.Unmarshal(value)
+	return err
+}
+
+func loadFromEtcd(value any) error {
+	return nil
 }
