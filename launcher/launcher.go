@@ -159,7 +159,7 @@ func (l *Launcher) runShutdownHandlers() {
 }
 
 func (l *Launcher) launchComponents(loadMap configx.ComponentLoadMap) {
-	launcher := newComponentsLauncher(loadMap)
+	launcher := NewComponentsLauncher(loadMap)
 	launcher.launch()
 }
 

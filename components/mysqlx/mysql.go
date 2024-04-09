@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/TremblingV5/box/components"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -14,14 +15,14 @@ import (
 
 var (
 	globalClientMap = sync.Map{}
-	globalConfigMap = make(ConfigMap)
+	globalConfigMap = make(components.ConfigMap[*Config])
 )
 
-func GetConfig() ConfigMap {
+func GetConfig() components.ConfigMap[*Config] {
 	return globalConfigMap
 }
 
-func Init(cm ConfigMap) error {
+func Init(cm components.ConfigMap[*Config]) error {
 	globalConfigMap = cm
 
 	for k, v := range cm {

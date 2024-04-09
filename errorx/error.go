@@ -7,7 +7,7 @@ import (
 )
 
 type Error struct {
-	HttpCode uint
+	HttpCode int
 	BizCode  int64
 	Message  string
 	Domain   string
@@ -40,7 +40,7 @@ func NewWithCtx(ctx context.Context, options ...Option) *Error {
 	return resolveOptions(new(), append(extractFields(ctx), options...)...)
 }
 
-func (e *Error) String() string {
+func (e *Error) Error() string {
 	if isCustomSerializer {
 		return serializer(e)
 	}

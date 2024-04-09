@@ -2,8 +2,6 @@ package mysqlx
 
 import "fmt"
 
-type ConfigMap map[string]*Config
-
 type Config struct {
 	Dialect           string `yaml:"dialect" json:"dialect"`
 	Host              string `yaml:"host" json:"host"`

@@ -2,21 +2,23 @@ package launcher
 
 import (
 	"context"
+	"github.com/TremblingV5/box/components"
 	"github.com/TremblingV5/box/components/mysqlx"
+	"github.com/TremblingV5/box/components/redisx"
 	"github.com/TremblingV5/box/configx"
 	"github.com/TremblingV5/box/gofer"
 	"github.com/TremblingV5/box/logx"
 	"go.uber.org/zap"
 )
 
-type componentsLauncher struct {
+type ComponentsLauncher struct {
 	group             *gofer.Group
 	components        map[string]func() error
 	componentsLoadMap configx.ComponentLoadMap
 }
 
-func newComponentsLauncher(componentsLoadMap configx.ComponentLoadMap) *componentsLauncher {
-	return &componentsLauncher{
+func NewComponentsLauncher(componentsLoadMap configx.ComponentLoadMap) *ComponentsLauncher {
+	return &ComponentsLauncher{
 		group: gofer.NewGroup(
 			context.Background(),
 			gofer.UseErrorGroup(),
@@ -25,9 +27,13 @@ func newComponentsLauncher(componentsLoadMap configx.ComponentLoadMap) *componen
 	}
 }
 
-func (l *componentsLauncher) launch() {
-	l.launchComponent("mysql", "mysql", func(storeKey, configKey string) error {
-		return mysqlx.Load(storeKey, configKey).Start()
+func (l *ComponentsLauncher) launch() {
+	l.LaunchComponent("mysql", "mysql", func(storeKey, configKey string) error {
+		return components.Load(storeKey, configKey, mysqlx.Init).Start()
+	})
+
+	l.LaunchComponent("redis", "redis", func(storeKey, configKey string) error {
+		return components.Load(storeKey, configKey, redisx.Init).Start()
 	})
 
 	for _, fn := range l.components {
@@ -39,7 +45,19 @@ func (l *componentsLauncher) launch() {
 	}
 }
 
-func (l *componentsLauncher) launchComponent(name, configKey string, launch func(storeKey, configKey string) error) {
+func (l *ComponentsLauncher) CustomLaunch(launch func(l *ComponentsLauncher)) {
+	launch(l)
+
+	for _, fn := range l.components {
+		l.group.Run(fn)
+	}
+
+	if err := l.group.Wait(); err != nil {
+		panic("launch components error: " + err.Error())
+	}
+}
+
+func (l *ComponentsLauncher) LaunchComponent(name, configKey string, launch func(storeKey, configKey string) error) {
 	storeKey := configx.StoreKeyDefault
 
 	if loadConfig, ok := l.componentsLoadMap[name]; ok && loadConfig != nil {
@@ -68,6 +86,6 @@ func (l *componentsLauncher) launchComponent(name, configKey string, launch func
 	})
 }
 
-func (l *componentsLauncher) register(name string, fn func() error) {
+func (l *ComponentsLauncher) register(name string, fn func() error) {
 	l.components[name] = fn
 }
