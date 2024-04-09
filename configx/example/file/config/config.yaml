@@ -1,0 +1,14 @@
+system:
+    appName: "configx"
+
+subConfig:
+    biz:
+        type: file
+        location: biz
+    biz1:
+        type: inherit
+        location: biz1
+
+test:
+    test1: 11
+    test2: 22

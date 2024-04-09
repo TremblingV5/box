@@ -2,6 +2,7 @@ package configx
 
 import (
 	"context"
+	"errors"
 	"github.com/spf13/viper"
 	"sync"
 	"sync/atomic"
@@ -30,6 +31,7 @@ type Store struct {
 	started   atomic.Value
 	binderMap sync.Map
 	viper     viper.Viper
+	configs   sync.Map
 }
 
 func NewStore() *Store {
@@ -38,6 +40,7 @@ func NewStore() *Store {
 		aval:    atomic.Value{},
 		started: atomic.Value{},
 		viper:   *viper.New(),
+		configs: sync.Map{},
 	}
 }
 
@@ -46,5 +49,10 @@ func (s *Store) GetSubNodes(key string) *viper.Viper {
 }
 
 func (s *Store) UnmarshalKey(configKey string, value any) error {
-	return nil
+	v := s.GetSubNodes(configKey)
+	if v == nil {
+		return errors.New("config key not found")
+	}
+
+	return v.Unmarshal(value)
 }
