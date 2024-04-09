@@ -27,7 +27,7 @@ func main() {
 	l := launcher.New()
 
 	l.AddBeforeConfigInitHandler(func() {
-		configx.SetRootConfigPath("./components/mysqlx/example/config/config.yaml")
+		configx.SetRootConfigPath("./components/mysqlx/example/config")
 	})
 
 	l.AddBeforeServerStartHandler(func() {

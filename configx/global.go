@@ -90,14 +90,14 @@ func solveBaseConfig() {
 	configCenterUrl := os.Getenv(ConfigCenterUrlEnvKey)
 
 	baseConfigStore := GetStore(StoreKeyConfig)
-	cfg := make(map[string]SubConfig)
-	err := baseConfigStore.UnmarshalKey("subConfig", &cfg)
-	if err != nil {
-		panic(err)
-	}
+	subConfigs := make(map[string]SubConfig)
+	_ = baseConfigStore.UnmarshalKey("subConfig", &subConfigs)
+
+	componentsLoadConfigs := make(ComponentLoadMap)
+	_ = baseConfigStore.UnmarshalKey("componentLoad", &componentsLoadConfigs)
 
 	for key, watchSetting := range globalWatchMap {
-		subConfig, ok := cfg[key]
+		subConfig, ok := subConfigs[key]
 		if !ok {
 			continue
 		}
