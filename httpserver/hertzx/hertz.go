@@ -1,11 +1,12 @@
-package httpserver
+package hertzx
 
 import (
+	"net"
+	"sync"
+
 	"github.com/TremblingV5/box/gofer"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/route"
-	"net"
-	"sync"
 )
 
 type RegisterHertzRouter func(*route.RouterGroup)
