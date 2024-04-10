@@ -1,5 +1,7 @@
 package dbtx
 
+import "context"
+
 type Handler struct {
 	getTxOp func() TX
 }

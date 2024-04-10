@@ -24,7 +24,7 @@ func extractFields(ctx context.Context) []Option {
 	return result
 }
 
-func AddErrorHttpCode(ctx context.Context, code uint) context.Context {
+func AddErrorHttpCode(ctx context.Context, code int) context.Context {
 	return addField(ctx, WithHttpCode(code))
 }
 

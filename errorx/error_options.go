@@ -2,7 +2,7 @@ package errorx
 
 type Option func(err *Error)
 
-func WithHttpCode(code uint) Option {
+func WithHttpCode(code int) Option {
 	return func(err *Error) {
 		err.HttpCode = code
 	}
