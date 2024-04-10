@@ -1,13 +1,14 @@
-package httpserver
+package ginx
 
 import (
 	"errors"
-	"github.com/TremblingV5/box/gofer"
-	"github.com/TremblingV5/box/logx"
-	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
 	"sync"
+
+	"github.com/TremblingV5/box/gofer"
+	"github.com/TremblingV5/box/logx"
+	"github.com/gin-gonic/gin"
 )
 
 type RegisterGinRouter func(*gin.RouterGroup)
