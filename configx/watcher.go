@@ -15,6 +15,12 @@ func Watch(storeKey string, options ...WatchOption) WatchFunc {
 	}
 }
 
+func ResolveWatcher(watchers ...WatchFunc) {
+	for _, watcher := range watchers {
+		watcher(globalWatchMap)
+	}
+}
+
 type (
 	WatchMap map[string]*WatchSetting
 

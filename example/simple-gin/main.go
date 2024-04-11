@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/TremblingV5/box/httpserver"
-	"github.com/TremblingV5/box/launcher"
 	"github.com/gin-gonic/gin"
+
+	"github.com/TremblingV5/box/httpserver/ginx"
+	"github.com/TremblingV5/box/launcher"
 )
 
-func registerHelloWorldHandler() httpserver.RegisterGinRouter {
+func registerHelloWorldHandler() ginx.RegisterGinRouter {
 	return func(group *gin.RouterGroup) {
 		group.GET("/hello", func(c *gin.Context) {
 			c.JSON(200, gin.H{
@@ -16,8 +17,8 @@ func registerHelloWorldHandler() httpserver.RegisterGinRouter {
 	}
 }
 
-func initGinServer() *httpserver.GinServer {
-	ginServer := httpserver.NewGinServer(":8080", "debug", "/")
+func initGinServer() *ginx.GinServer {
+	ginServer := ginx.NewGinServer(":8080", "debug", "/")
 	ginServer.RegisterHttpHandlers(registerHelloWorldHandler())
 	return ginServer
 }

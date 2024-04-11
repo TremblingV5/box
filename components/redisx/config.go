@@ -32,5 +32,5 @@ func (c *Config) SetDefault() {
 }
 
 func (c *Config) ToDSN() string {
-	return fmt.Sprintf("%d:%d", c.Host, c.Port)
+	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }

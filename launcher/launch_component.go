@@ -23,6 +23,7 @@ func NewComponentsLauncher(componentsLoadMap configx.ComponentLoadMap) *Componen
 			context.Background(),
 			gofer.UseErrorGroup(),
 		),
+		components:        make(map[string]func() error),
 		componentsLoadMap: componentsLoadMap,
 	}
 }

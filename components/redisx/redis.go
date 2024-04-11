@@ -38,6 +38,8 @@ func Init(cm components.ConfigMap[*Config]) error {
 }
 
 func Connect(c *Config) (*RedisClients, error) {
+	c.SetDefault()
+
 	option := &redis.Options{}
 	option.Addr = c.ToDSN()
 	if c.Password != "" {
