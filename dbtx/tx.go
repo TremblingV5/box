@@ -23,26 +23,26 @@ func Init(op func() TX) {
 
 type txKey struct{}
 
-func WithTx(ctx context.Context, tx TX) context.Context {
+func WithTx(ctx context.Context, tx interface{}) context.Context {
 	return context.WithValue(ctx, txKey{}, tx)
 }
 
-func Tx(ctx context.Context) TX {
+func Tx[T any](ctx context.Context) T {
 	v := ctx.Value(txKey{})
 	if v == nil {
-		return nil
+		return interface{}(nil).(T)
 	}
 
-	tx, ok := v.(TX)
+	tx, ok := v.(T)
 	if !ok {
-		return nil
+		return interface{}(nil).(T)
 	}
 
 	return tx
 }
 
 func persist(ctx context.Context, err error) {
-	tx := Tx(ctx)
+	tx := Tx[TX](ctx)
 
 	if err == nil {
 		if commitErr := tx.Commit(); commitErr != nil {
@@ -76,7 +76,7 @@ func WithTxPersistCustom(ctx context.Context, getTx func() TX) (context.Context,
 }
 
 func withTxPersist(ctx context.Context, forceReplace bool, forceGetTx func() TX) (context.Context, func(err error)) {
-	t0 := Tx(ctx)
+	t0 := Tx[TX](ctx)
 	if t0 != nil && !forceReplace {
 		return ctx, func(err error) {
 
