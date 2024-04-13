@@ -2,6 +2,7 @@ package dbtx
 
 import (
 	"context"
+	"errors"
 	"sync"
 )
 
@@ -27,33 +28,35 @@ func WithTx(ctx context.Context, tx interface{}) context.Context {
 	return context.WithValue(ctx, txKey{}, tx)
 }
 
-func Tx[T any](ctx context.Context) T {
+func TxDo[T any](ctx context.Context, op func(tx T) error) error {
 	v := ctx.Value(txKey{})
 	if v == nil {
-		return interface{}(nil).(T)
+		return errors.New("context not bind to ctx")
 	}
 
 	tx, ok := v.(T)
 	if !ok {
-		return interface{}(nil).(T)
+		return errors.New("context not bind to ctx")
 	}
 
-	return tx
+	return op(tx)
 }
 
 func persist(ctx context.Context, err error) {
-	tx := Tx[TX](ctx)
-
 	if err == nil {
-		if commitErr := tx.Commit(); commitErr != nil {
+		if commitErr := TxDo(ctx, func(tx TX) error {
+			return tx.Commit()
+		}); commitErr != nil {
 			return
 		}
 
 		return
 	}
 
-	if rollbackErr := tx.Rollback(); rollbackErr != nil {
-
+	if rollbackErr := TxDo(ctx, func(tx TX) error {
+		return tx.Rollback()
+	}); rollbackErr != nil {
+		return
 	}
 
 	return
@@ -76,8 +79,10 @@ func WithTxPersistCustom(ctx context.Context, getTx func() TX) (context.Context,
 }
 
 func withTxPersist(ctx context.Context, forceReplace bool, forceGetTx func() TX) (context.Context, func(err error)) {
-	t0 := Tx[TX](ctx)
-	if t0 != nil && !forceReplace {
+	checkTxErr := TxDo(ctx, func(tx TX) error {
+		return nil
+	})
+	if checkTxErr == nil && !forceReplace {
 		return ctx, func(err error) {
 
 		}

@@ -3,6 +3,7 @@ module github.com/TremblingV5/box
 go 1.21
 
 require (
+	github.com/IBM/sarama v1.43.1
 	github.com/cloudwego/hertz v0.8.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -10,6 +11,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/spf13/viper v1.18.2
+	go.mongodb.org/mongo-driver v1.14.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/sync v0.6.0
 	gorm.io/driver/mysql v1.5.6
@@ -22,7 +24,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/firestore v1.15.0 // indirect
 	cloud.google.com/go/longrunning v0.5.6 // indirect
-	github.com/IBM/sarama v1.43.1 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/bytedance/go-tagexpr/v2 v2.9.2 // indirect
 	github.com/bytedance/gopkg v0.0.0-20220413063733-65bf48ffb3a7 // indirect
@@ -117,7 +118,6 @@ require (
 	go.etcd.io/etcd/client/pkg/v3 v3.5.10 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.10 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.10 // indirect
-	go.mongodb.org/mongo-driver v1.14.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
