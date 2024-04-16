@@ -75,3 +75,19 @@ func (e *Error) toString() string {
 
 	return builder.String()
 }
+
+func Clone(e *Error) *Error {
+	if e == nil {
+		return nil
+	}
+
+	newErr := &Error{
+		HttpCode: e.HttpCode,
+		BizCode:  e.BizCode,
+		Message:  e.Message,
+		Wrapped:  e.Wrapped,
+	}
+
+	newErr.Reason = append(newErr.Reason, e.Reason...)
+	return newErr
+}
