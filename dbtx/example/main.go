@@ -22,6 +22,8 @@ func (t *fakeTx) Rollback() error {
 }
 
 func init() {
+	// Used to define how we get the `tx`. It's useful when we have
+	// more than one `tx` in the project.
 	dbtx.Init(func() dbtx.TX {
 		return &fakeTx{
 			name: "fakeTx 001",
@@ -30,6 +32,7 @@ func init() {
 }
 
 func serviceMethod(ctx context.Context) (err error) {
+	// use the following four lines to add a `tx` to context and ensure transaction can be committed.
 	ctx, persist := dbtx.WithTXPersist(ctx)
 	defer func() {
 		persist(err)
@@ -70,6 +73,7 @@ func repositoryMethod1(ctx context.Context) error {
 }
 
 func repositoryMethod2(ctx context.Context) error {
+	// dbtx.TxDo used to do something without returning value.
 	return dbtx.TxDo(ctx, func(tx *fakeTx) error {
 		log.Println("get tx and do something in dbtx.TxDo:", tx)
 		return nil
@@ -77,6 +81,7 @@ func repositoryMethod2(ctx context.Context) error {
 }
 
 func repositoryMethod3(ctx context.Context) (string, error) {
+	// dbtx.TxDoGetValue used to do something and return a single value.
 	return dbtx.TxDoGetValue(ctx, func(tx *fakeTx) (string, error) {
 		log.Println("get tx and do something in dbtx.TxDoGetValue:", tx)
 		return "tx do get value successfully", nil
@@ -84,6 +89,7 @@ func repositoryMethod3(ctx context.Context) (string, error) {
 }
 
 func repositoryMethod4(ctx context.Context) ([]string, error) {
+	// dbtx.TxDoGetSlice used to do something and return a slice.
 	return dbtx.TxDoGetSlice(ctx, func(tx *fakeTx) ([]string, error) {
 		log.Println("get tx and do something in dbtx.TxDoGetSlice:", tx)
 		return []string{"tx", "do", "get", "slice", "successfully"}, nil
