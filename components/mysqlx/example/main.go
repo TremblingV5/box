@@ -1,39 +1,27 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-
+	"github.com/TremblingV5/box/components"
+	"github.com/TremblingV5/box/components/mysqlx"
 	"github.com/TremblingV5/box/configx"
-	"github.com/TremblingV5/box/httpserver/ginx"
 	"github.com/TremblingV5/box/launcher"
 )
 
-func registerHelloWorldHandler() ginx.RegisterGinRouter {
-	return func(group *gin.RouterGroup) {
-		group.GET("/hello", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"message": "hello world",
-			})
-		})
-	}
-}
-
-func initGinServer() *ginx.GinServer {
-	ginServer := ginx.NewGinServer(":8080", "debug", "/")
-	ginServer.RegisterHttpHandlers(registerHelloWorldHandler())
-	return ginServer
-}
-
 func main() {
-	l := launcher.New()
+	configx.SetRootConfigPath("./components/mysqlx/example/config")
+	configx.ResolveWatcher(
+		configx.Watch("database", configx.WithModel(&configx.Config{})),
+	)
+	configx.Init()
 
-	l.AddBeforeConfigInitHandler(func() {
-		configx.SetRootConfigPath("./components/mysqlx/example/config")
+	store := configx.GetStore(configx.StoreKeyConfig)
+	loadMap := make(configx.ComponentLoadMap)
+	store.UnmarshalKey("componentLoad", &loadMap)
+
+	l := launcher.NewComponentsLauncher(loadMap)
+	l.CustomLaunch(func(l *launcher.ComponentsLauncher) {
+		l.LaunchComponent("mysql", "mysql", func(storeKey, configKey string) error {
+			return components.Load(storeKey, configKey, mysqlx.Init).Start()
+		})
 	})
-
-	l.AddBeforeServerStartHandler(func() {
-		l.AddServer(initGinServer())
-	})
-
-	l.Run()
 }

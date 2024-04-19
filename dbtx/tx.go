@@ -28,15 +28,42 @@ func WithTx(ctx context.Context, tx interface{}) context.Context {
 	return context.WithValue(ctx, txKey{}, tx)
 }
 
-func TxDo[T any](ctx context.Context, op func(tx T) error) error {
+func Tx[T any](ctx context.Context) (tx T, err error) {
 	v := ctx.Value(txKey{})
 	if v == nil {
-		return errors.New("context not bind to ctx")
+		return tx, errors.New("context not bind with tx")
 	}
 
 	tx, ok := v.(T)
 	if !ok {
-		return errors.New("context not bind to ctx")
+		return tx, errors.New("context not bind with tx")
+	}
+
+	return tx, nil
+}
+
+func TxDo[T any](ctx context.Context, op func(tx T) error) error {
+	tx, err := Tx[T](ctx)
+	if err != nil {
+		return err
+	}
+
+	return op(tx)
+}
+
+func TxDoGetValue[T any, R any](ctx context.Context, op func(tx T) (R, error)) (r R, err error) {
+	tx, err := Tx[T](ctx)
+	if err != nil {
+		return r, err
+	}
+
+	return op(tx)
+}
+
+func TxDoGetSlice[T any, R any](ctx context.Context, op func(tx T) ([]R, error)) ([]R, error) {
+	tx, err := Tx[T](ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return op(tx)
