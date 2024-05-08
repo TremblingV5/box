@@ -1,0 +1,21 @@
+version: '3'
+
+networks:
+    total:
+        driver: bridge
+
+services:
+    mongo:
+        image: mongo:latest
+        command: mongod --dbpath /data/db --oplogSize 128
+        networks:
+            - total
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: root
+            MONGO_INITDB_DATABASE: box
+        volumes:
+            - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+        ports:
+            - "27017:27017"
+        restart: always

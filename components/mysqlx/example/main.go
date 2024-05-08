@@ -1,27 +1,20 @@
 package main
 
 import (
-	"github.com/TremblingV5/box/components"
+	"context"
+	"github.com/TremblingV5/box/components/internal/example"
 	"github.com/TremblingV5/box/components/mysqlx"
-	"github.com/TremblingV5/box/configx"
-	"github.com/TremblingV5/box/launcher"
+	"log"
 )
 
 func main() {
-	configx.SetRootConfigPath("./components/mysqlx/example/config")
-	configx.ResolveWatcher(
-		configx.Watch("database", configx.WithModel(&configx.Config{})),
+	example.InitComponentConfig(
+		"./components/mysqlx/example/config",
+		"mysql",
+		"mysql",
+		mysqlx.Init,
 	)
-	configx.Init()
 
-	store := configx.GetStore(configx.StoreKeyConfig)
-	loadMap := make(configx.ComponentLoadMap)
-	store.UnmarshalKey("componentLoad", &loadMap)
-
-	l := launcher.NewComponentsLauncher(loadMap)
-	l.CustomLaunch(func(l *launcher.ComponentsLauncher) {
-		l.LaunchComponent("mysql", "mysql", func(storeKey, configKey string) error {
-			return components.Load(storeKey, configKey, mysqlx.Init).Start()
-		})
-	})
+	db := mysqlx.GetDBClient(context.Background(), "default")
+	log.Println(db)
 }

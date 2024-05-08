@@ -1,5 +1,5 @@
 componentLoad:
-    mysql:
+    mongo:
         storeKey: database
 
 subConfig:
