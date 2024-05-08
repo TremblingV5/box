@@ -13,8 +13,8 @@ var (
 	globalConfigMap = make(components.ConfigMap[*Config])
 )
 
-type RedisClients struct {
-	clients sync.Map
+func getGlobalClientMapKey(configKey, dbName string) string {
+	return fmt.Sprintf("%s.%s", configKey, dbName)
 }
 
 func GetConfig() components.ConfigMap[*Config] {
@@ -25,19 +25,13 @@ func Init(cm components.ConfigMap[*Config]) error {
 	globalConfigMap = cm
 
 	for k, v := range cm {
-		db, err := Connect(v)
-
-		if err != nil {
-			return err
-		}
-
-		globalClientMap.Store(k, db)
+		Connect(k, v)
 	}
 
 	return nil
 }
 
-func Connect(c *Config) (*RedisClients, error) {
+func Connect(configKey string, c *Config) {
 	c.SetDefault()
 
 	option := &redis.Options{}
@@ -46,35 +40,42 @@ func Connect(c *Config) (*RedisClients, error) {
 		option.Password = c.Password
 	}
 
-	clients := &RedisClients{}
-
-	for _, item := range c.DBList {
+	for name, number := range c.DBList {
 		o := &redis.Options{
 			Addr:     option.Addr,
 			Password: option.Password,
-			DB:       item.Number,
+			DB:       number,
 		}
 		client := redis.NewClient(o)
 		if _, err := client.Ping().Result(); err != nil {
 			panic(err)
 		}
 
-		clients.clients.Store(item.Name, client)
+		globalClientMap.Store(getGlobalClientMapKey(configKey, name), client)
 	}
-
-	return clients, nil
 }
 
-func GetRedisClient(ctx context.Context, storeKey, dbKey string) *redis.Client {
-	if v, ok := globalClientMap.Load(storeKey); ok {
-		if c, ok := v.(*RedisClients); ok {
-			if v, ok := c.clients.Load(dbKey); ok {
-				if client, ok := v.(*redis.Client); ok {
-					return client
-				}
-			}
-		}
+// GetClient used to get a redis client instance
+// keys is used to declare get which one
+// Index 0 of keys is the store key
+// Index 1 of keys is the db key
+// If keys is empty, it will return the default client
+func GetClient(ctx context.Context, keys ...string) *redis.Client {
+	storeKey := "default"
+	dbKey := "default"
+
+	if len(keys) > 0 {
+		storeKey = keys[0]
 	}
 
-	panic(fmt.Sprintf("%s, %s not init", storeKey, dbKey))
+	if len(keys) > 1 {
+		dbKey = keys[1]
+	}
+
+	v, ok := globalClientMap.Load(getGlobalClientMapKey(storeKey, dbKey))
+	if !ok {
+		panic(fmt.Sprintf("%s, %s not init", storeKey, dbKey))
+	}
+
+	return v.(*redis.Client)
 }

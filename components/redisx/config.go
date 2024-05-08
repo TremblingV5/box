@@ -3,15 +3,10 @@ package redisx
 import "fmt"
 
 type Config struct {
-	Host     string          `json:"host" yaml:"host"`
-	Port     int             `json:"port" yaml:"port"`
-	Password string          `json:"password" yaml:"password"`
-	DBList   []*DBListConfig `json:"db_list" yaml:"db_list"`
-}
-
-type DBListConfig struct {
-	Name   string `json:"name" yaml:"name"`
-	Number int    `json:"number" yaml:"number"`
+	Host     string         `json:"host" yaml:"host"`
+	Port     int            `json:"port" yaml:"port"`
+	Password string         `json:"password" yaml:"password"`
+	DBList   map[string]int `json:"db_list" yaml:"db_list"`
 }
 
 func (c *Config) SetDefault() {
@@ -24,10 +19,7 @@ func (c *Config) SetDefault() {
 	}
 
 	if len(c.DBList) == 0 {
-		c.DBList = append(c.DBList, &DBListConfig{
-			Name:   "default",
-			Number: 0,
-		})
+		c.DBList["default"] = 0
 	}
 }
 

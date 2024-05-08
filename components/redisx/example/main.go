@@ -15,7 +15,7 @@ func main() {
 		mysqlx.Init,
 	)
 
-	client := redisx.GetRedisClient(context.Background(), "default", "default")
+	client := redisx.GetClient(context.Background(), "default", "default")
 	if err := client.Ping().Err(); err != nil {
 		panic(err)
 	}
