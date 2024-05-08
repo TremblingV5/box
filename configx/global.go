@@ -3,6 +3,7 @@ package configx
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -10,9 +11,10 @@ import (
 )
 
 var (
-	globalStoreMap  sync.Map
-	globalStoreInit atomic.Bool
-	globalWatchMap  = make(WatchMap)
+	globalStoreMap     sync.Map
+	globalStoreInit    atomic.Bool
+	globalWatchMap     = make(WatchMap)
+	rootConfigFilename = "config"
 )
 
 const (
@@ -21,6 +23,18 @@ const (
 	StoreKeyDefault            = "default"
 	StoreKeyConfig             = "config"
 )
+
+func SetRootConfigFilename(filename string) {
+	rootConfigFilename = filename
+}
+
+func getRootConfigFilename(fileType string) string {
+	if strings.HasSuffix(rootConfigFilename, fileType) {
+		return rootConfigFilename
+	}
+
+	return rootConfigFilename + "." + fileType
+}
 
 func GetStore(storeKey string) *Store {
 	if store, ok := globalStoreMap.Load(storeKey); ok {
@@ -129,7 +143,7 @@ func solveBaseConfig() {
 }
 
 func initFromYaml() {
-	totalConfigFilePath := filepath.Join(RootConfigPath, "config.yaml")
+	totalConfigFilePath := filepath.Join(RootConfigPath, getRootConfigFilename("yaml"))
 	SetStore(StoreKeyConfig, loadConfigFromFile(totalConfigFilePath, "yaml"))
 }
 
