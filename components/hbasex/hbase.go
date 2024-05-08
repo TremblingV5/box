@@ -31,11 +31,11 @@ func Init(cm components.ConfigMap[*Config]) error {
 	return nil
 }
 
-func Connect(c *Config) (*gohbase.Client, error) {
+func Connect(c *Config) (gohbase.Client, error) {
 	c.SetDefault()
 
 	client := gohbase.NewClient(c.Host)
-	return &client, nil
+	return client, nil
 }
 
 func getKey(keys ...string) string {
@@ -46,12 +46,12 @@ func getKey(keys ...string) string {
 	return keys[0]
 }
 
-func GetClient(ctx context.Context, keys ...string) *gohbase.Client {
+func GetClient(ctx context.Context, keys ...string) gohbase.Client {
 	key := getKey(keys...)
 	client, ok := globalClientMap.Load(key)
 	if !ok {
 		panic("client not found")
 	}
 
-	return client.(*gohbase.Client)
+	return client.(gohbase.Client)
 }
