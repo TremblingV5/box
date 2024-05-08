@@ -2,10 +2,11 @@ package cachex
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/spaolacci/murmur3"
 )
 
@@ -37,13 +38,13 @@ func NewBloom() *Bloom {
 	return &Bloom{}
 }
 
-func (b *Bloom) Add(key string, value any) error {
+func (b *Bloom) Add(ctx context.Context, key string, value any) error {
 	location, err := getLocation(value)
 	if err != nil {
 		return err
 	}
 
-	_, err = b.client.Eval(setScript, []string{key}, location).Result()
+	_, err = b.client.Eval(ctx, setScript, []string{key}, location).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil
 	}
@@ -51,13 +52,13 @@ func (b *Bloom) Add(key string, value any) error {
 	return err
 }
 
-func (b *Bloom) Existed(key string, value any) bool {
+func (b *Bloom) Existed(ctx context.Context, key string, value any) bool {
 	location, err := getLocation(value)
 	if err != nil {
 		return false
 	}
 
-	result, err := b.client.Eval(getScript, []string{key}, location).Result()
+	result, err := b.client.Eval(ctx, getScript, []string{key}, location).Result()
 	if err != nil {
 		return false
 	}

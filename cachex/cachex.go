@@ -6,7 +6,7 @@ import (
 	"github.com/TremblingV5/box/gofer"
 	"github.com/TremblingV5/box/logx"
 	"github.com/cloudwego/hertz/pkg/common/json"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"time"
 )
 
@@ -41,7 +41,7 @@ func (c *cachex) fetchSet(ctx context.Context, key string, fetch func(ctx contex
 	value, err := fetch(ctx)
 	if err != nil {
 		if c.cacheBarrier {
-			_ = c.client.Set(key, NotFoundPlaceHolder, c.redisTTL).Err()
+			_ = c.client.Set(ctx, key, NotFoundPlaceHolder, c.redisTTL).Err()
 			return nil, ErrCachePlaceHolder
 		}
 		return nil, err
@@ -53,7 +53,7 @@ func (c *cachex) fetchSet(ctx context.Context, key string, fetch func(ctx contex
 	}
 
 	ttl := c.redisTTL
-	err = c.client.Set(key, val, ttl).Err()
+	err = c.client.Set(ctx, key, val, ttl).Err()
 	if err != nil {
 		logx.WarnCtx(ctx, "fetchSet write redis failed: %v", err)
 	}
@@ -74,7 +74,7 @@ func (c *cachex) getCache(ctx context.Context, key string) ([]byte, error) {
 		// TODO: 读本地缓存并返回
 	}
 
-	result, err := c.client.Get(key).Result()
+	result, err := c.client.Get(ctx, key).Result()
 	if err != nil {
 		return nil, err
 	}

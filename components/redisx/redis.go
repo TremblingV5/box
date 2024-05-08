@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/TremblingV5/box/components"
-	"github.com/go-redis/redis"
+
+	"github.com/go-redis/redis/v8"
 	"sync"
 )
 
@@ -47,7 +48,7 @@ func Connect(configKey string, c *Config) {
 			DB:       number,
 		}
 		client := redis.NewClient(o)
-		if _, err := client.Ping().Result(); err != nil {
+		if err := client.Ping(context.Background()).Err(); err != nil {
 			panic(err)
 		}
 
