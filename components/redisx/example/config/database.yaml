@@ -1,10 +1,5 @@
 redis:
     default:
         host: localhost
-        port: 27017
-        username: root
+        port: 6379
         password: root
-        database: box
-        collections:
-            - box1
-            - box2
