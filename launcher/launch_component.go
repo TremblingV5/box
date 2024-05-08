@@ -2,6 +2,8 @@ package launcher
 
 import (
 	"context"
+	"github.com/TremblingV5/box/components/miniox"
+	"github.com/TremblingV5/box/components/mongox"
 
 	"github.com/TremblingV5/box/components"
 	"github.com/TremblingV5/box/components/mysqlx"
@@ -36,6 +38,14 @@ func (l *ComponentsLauncher) launch() {
 
 	l.LaunchComponent("redis", "redis", func(storeKey, configKey string) error {
 		return components.Load(storeKey, configKey, redisx.Init).Start()
+	})
+
+	l.LaunchComponent("mongo", "mongo", func(storeKey, configKey string) error {
+		return components.Load(storeKey, configKey, mongox.Init).Start()
+	})
+
+	l.LaunchComponent("minio", "minio", func(storeKey, configKey string) error {
+		return components.Load(storeKey, configKey, miniox.Init).Start()
 	})
 
 	for _, fn := range l.components {

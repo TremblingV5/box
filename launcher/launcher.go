@@ -100,7 +100,11 @@ func (l *Launcher) Run(options ...Option) {
 	logx.Console().Info(fmt.Sprintf("current work directory: %s", dir))
 
 	l.runBeforeConfigInitHandlers()
+	configx.ResolveWatcher(
+		configx.Watch("database", configx.WithModel(&configx.Config{})),
+	)
 	configx.Init()
+
 	logx.Console().Info("start to launch")
 	l.runServer()
 }
