@@ -14,12 +14,19 @@ type TX interface {
 var (
 	getTxOp    func() TX
 	txInitOnce sync.Once
+	opWhenNoTx func(tx TX, err error) (TX, error) = func(tx TX, err error) (TX, error) {
+		return getTxOp(), nil
+	}
 )
 
 func Init(op func() TX) {
 	txInitOnce.Do(func() {
 		getTxOp = op
 	})
+}
+
+func SetOpWhenNoTx(op func(tx TX, err error) (TX, error)) {
+	opWhenNoTx = op
 }
 
 type txKey struct{}
@@ -43,50 +50,83 @@ func Tx[T any](ctx context.Context) (tx T, err error) {
 }
 
 func TxDo[T any](ctx context.Context, op func(tx T) error) error {
-	tx, err := Tx[T](ctx)
-	if err != nil {
-		return err
+	tx, getTxErr := Tx[T](ctx)
+	if getTxErr != nil {
+		newTx, err := opWhenNoTx(nil, getTxErr)
+		if err != nil {
+			return err
+		}
+
+		tx = newTx.(T)
 	}
 
-	return op(tx)
+	opErr := op(tx)
+	if getTxErr != nil {
+		ctx := context.WithValue(ctx, txKey{}, tx)
+		return persist(ctx, opErr)
+	}
+
+	return opErr
 }
 
 func TxDoGetValue[T any, R any](ctx context.Context, op func(tx T) (R, error)) (r R, err error) {
-	tx, err := Tx[T](ctx)
-	if err != nil {
-		return r, err
+	tx, getTxErr := Tx[T](ctx)
+	if getTxErr != nil {
+		newTx, err := opWhenNoTx(nil, getTxErr)
+		if err != nil {
+			return r, err
+		}
+
+		tx = newTx.(T)
 	}
 
-	return op(tx)
+	result, opErr := op(tx)
+	if getTxErr != nil {
+		ctx := context.WithValue(ctx, txKey{}, tx)
+		return result, persist(ctx, opErr)
+	}
+
+	return result, opErr
 }
 
 func TxDoGetSlice[T any, R any](ctx context.Context, op func(tx T) ([]R, error)) ([]R, error) {
-	tx, err := Tx[T](ctx)
-	if err != nil {
-		return nil, err
+	tx, getTxErr := Tx[T](ctx)
+	if getTxErr != nil {
+		newTx, err := opWhenNoTx(nil, getTxErr)
+		if err != nil {
+			return nil, err
+		}
+
+		tx = newTx.(T)
 	}
 
-	return op(tx)
+	result, opErr := op(tx)
+	if getTxErr != nil {
+		ctx := context.WithValue(ctx, txKey{}, tx)
+		return result, persist(ctx, opErr)
+	}
+
+	return result, opErr
 }
 
-func persist(ctx context.Context, err error) {
+func persist(ctx context.Context, err error) error {
 	if err == nil {
 		if commitErr := TxDo(ctx, func(tx TX) error {
 			return tx.Commit()
 		}); commitErr != nil {
-			return
+			return commitErr
 		}
 
-		return
+		return nil
 	}
 
 	if rollbackErr := TxDo(ctx, func(tx TX) error {
 		return tx.Rollback()
 	}); rollbackErr != nil {
-		return
+		return rollbackErr
 	}
 
-	return
+	return err
 }
 
 func ReplaceTxPersist(ctx context.Context) (context.Context, func(err error)) {
