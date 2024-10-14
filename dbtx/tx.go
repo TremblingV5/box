@@ -12,7 +12,6 @@ type TX interface {
 }
 
 var (
-	getOp      func() TX
 	getTxOp    func() TX
 	txInitOnce sync.Once
 )
@@ -27,10 +26,6 @@ type txKey struct{}
 
 func WithTx(ctx context.Context, tx interface{}) context.Context {
 	return context.WithValue(ctx, txKey{}, tx)
-}
-
-func getTx[T any]() T {
-	return getOp().(T)
 }
 
 func Tx[T any](ctx context.Context) (tx T, err error) {
@@ -51,7 +46,7 @@ func doCheckTx[T any, R any](ctx context.Context, op func(tx T) (R, error)) (R, 
 	tx, getTxErr := Tx[T](ctx)
 	var txCtx context.Context
 	if getTxErr != nil {
-		txCtx = context.WithValue(ctx, txKey{}, getOp())
+		txCtx = context.WithValue(ctx, txKey{}, getTxOp())
 	}
 
 	r, err := op(tx)
