@@ -1,6 +1,8 @@
 module github.com/TremblingV5/box
 
-go 1.21
+go 1.22
+
+toolchain go1.22.2
 
 require (
 	github.com/IBM/sarama v1.43.1
@@ -13,10 +15,12 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/spf13/viper v1.18.2
+	github.com/tsuna/gohbase v0.0.0-20240425232423-fa78846cafc9
 	go.mongodb.org/mongo-driver v1.14.0
 	go.uber.org/dig v1.17.1
+	go.uber.org/mock v0.5.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.7.0
 	gorm.io/driver/mysql v1.5.6
 	gorm.io/gorm v1.25.9
 )
@@ -140,7 +144,6 @@ require (
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/tsuna/gohbase v0.0.0-20240425232423-fa78846cafc9 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect

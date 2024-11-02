@@ -2,10 +2,10 @@ package dbtx
 
 import (
 	"context"
-	"errors"
 	"sync"
 )
 
+//go:generate mockgen -source=tx.go -destination=tx_mock.go -package=dbtx TX
 type TX interface {
 	Commit() error
 	Rollback() error
@@ -24,32 +24,37 @@ func Init(op func() TX) {
 
 type txKey struct{}
 
+// WithTx binds a tx to the context
 func WithTx(ctx context.Context, tx interface{}) context.Context {
 	return context.WithValue(ctx, txKey{}, tx)
 }
 
+// Tx gets and returns the tx from the context
 func Tx[T any](ctx context.Context) (tx T, err error) {
 	v := ctx.Value(txKey{})
 	if v == nil {
-		return tx, errors.New("context not bind with tx")
+		return tx, ErrNotBindWithTx
 	}
 
 	tx, ok := v.(T)
 	if !ok {
-		return tx, errors.New("context not bind with tx")
+		return tx, ErrNotBindWithTheSpecifiedTx
 	}
 
 	return tx, nil
 }
 
+// doCheckTx checks the tx and executes the operation
 func doCheckTx[T any, R any](ctx context.Context, op func(tx T) (R, error)) (R, error) {
 	tx, getTxErr := Tx[T](ctx)
 	var txCtx context.Context
+	// if tx is not bind to the context, get a new tx
 	if getTxErr != nil {
 		txCtx = context.WithValue(ctx, txKey{}, getTxOp())
 	}
 
 	r, err := op(tx)
+	// if tx is not bind to the context, commit or rollback the tx
 	if getTxErr != nil {
 		persist(txCtx, err)
 	}
@@ -72,24 +77,22 @@ func TxDoGetSlice[T any, R any](ctx context.Context, op func(tx T) ([]R, error))
 	return doCheckTx(ctx, op)
 }
 
-func persist(ctx context.Context, err error) {
+func persist(ctx context.Context, err error) (error, error) {
 	if err == nil {
 		if commitErr := TxDo(ctx, func(tx TX) error {
 			return tx.Commit()
-		}); commitErr != nil {
-			return
+		}); commitErr == nil {
+			return err, nil
 		}
-
-		return
 	}
 
 	if rollbackErr := TxDo(ctx, func(tx TX) error {
 		return tx.Rollback()
 	}); rollbackErr != nil {
-		return
+		return err, rollbackErr
 	}
 
-	return
+	return err, nil
 }
 
 func ReplaceTxPersist(ctx context.Context) (context.Context, func(err error)) {
