@@ -140,3 +140,20 @@ func Test_persist(t *testing.T) {
 		require.Equal(t, "rollback error", rollbackErr.Error())
 	})
 }
+
+func Test_WithTXPersist(t *testing.T) {
+	tx := NewMockTX(gomock.NewController(t))
+
+	t.Run("normal", func(t *testing.T) {
+		tx.EXPECT().Commit().Return(nil)
+		Init(func() TX {
+			return tx
+		})
+
+		ctx := WithTx(context.Background(), tx)
+		ctx, persistMethod := WithTXPersist(ctx)
+		require.NotNil(t, ctx)
+		require.NotNil(t, persistMethod)
+		persistMethod(nil)
+	})
+}

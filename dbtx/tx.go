@@ -116,9 +116,11 @@ func withTxPersist(ctx context.Context, forceReplace bool, forceGetTx func() TX)
 		return nil
 	})
 	if checkTxErr == nil && !forceReplace {
-		return ctx, func(err error) {
-
-		}
+		return ctx, func(ctx context.Context) func(err error) {
+			return func(err error) {
+				persist(ctx, err)
+			}
+		}(ctx)
 	}
 
 	var tx TX
