@@ -46,15 +46,15 @@ func Tx[T any](ctx context.Context) (tx T, err error) {
 
 // doCheckTx checks the tx and executes the operation
 func doCheckTx[T any, R any](ctx context.Context, op func(tx T) (R, error)) (R, error) {
-	tx, getTxErr := Tx[T](ctx)
+	_, getTxErr := Tx[T](ctx)
 	var txCtx context.Context
-	// if tx is not bind to the context, get a new tx
+	var newTx TX
 	if getTxErr != nil {
-		txCtx = context.WithValue(ctx, txKey{}, getTxOp())
+		newTx = getTxOp()
+		txCtx = context.WithValue(ctx, txKey{}, newTx)
 	}
 
-	r, err := op(tx)
-	// if tx is not bind to the context, commit or rollback the tx
+	r, err := op(newTx.(T))
 	if getTxErr != nil {
 		persist(txCtx, err)
 	}
