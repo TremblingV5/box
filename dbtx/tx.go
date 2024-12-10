@@ -46,7 +46,7 @@ func Tx[T any](ctx context.Context) (tx T, err error) {
 
 // doCheckTx checks the tx and executes the operation
 func doCheckTx[T any, R any](ctx context.Context, op func(tx T) (R, error)) (R, error) {
-	_, getTxErr := Tx[T](ctx)
+	tx, getTxErr := Tx[T](ctx)
 	var txCtx context.Context
 	var newTx TX
 	if getTxErr != nil {
@@ -54,7 +54,14 @@ func doCheckTx[T any, R any](ctx context.Context, op func(tx T) (R, error)) (R, 
 		txCtx = context.WithValue(ctx, txKey{}, newTx)
 	}
 
-	r, err := op(newTx.(T))
+	var r R
+	var err error
+	if getTxErr != nil {
+		r, err = op(newTx.(T))
+	} else {
+		r, err = op(tx)
+	}
+
 	if getTxErr != nil {
 		persist(txCtx, err)
 	}
