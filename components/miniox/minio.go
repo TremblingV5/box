@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/TremblingV5/box/components"
+	"github.com/go-kratos/kratos/v2/log"
 	"github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"sync"
 )
 
@@ -17,30 +19,34 @@ func GetConfig() components.ConfigMap[*Config] {
 	return globalConfigMap
 }
 
-func Init(cm components.ConfigMap[*Config]) error {
+func Init(cm components.ConfigMap[*Config]) (func() error, error) {
 	globalConfigMap = cm
 
 	for k, v := range cm {
 		client, err := Connect(v)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		globalClientMap.Store(k, client)
 	}
 
-	return nil
+	return IsHealth, nil
 }
 
-func Connect(c *Config) (*minio.Client, error) {
+func Connect(c *Config) (*minio.Core, error) {
 	c.SetDefault()
 
-	client, err := minio.New(
+	client, err := minio.NewCore(
 		fmt.Sprintf("%s:%d", c.Host, c.Port),
-		c.AccessKey,
-		c.SecretKey,
-		c.Secure,
+		&minio.Options{
+			Creds: credentials.NewStaticV4(
+				c.AccessKey,
+				c.SecretKey,
+				"",
+			),
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -57,7 +63,7 @@ func getKeys(keys ...string) string {
 	return keys[0]
 }
 
-func GetClient(ctx context.Context, keys ...string) *minio.Client {
+func GetClient(ctx context.Context, keys ...string) *minio.Core {
 	key := getKeys(keys...)
 
 	value, ok := globalClientMap.Load(key)
@@ -65,5 +71,21 @@ func GetClient(ctx context.Context, keys ...string) *minio.Client {
 		panic(fmt.Sprintf("minio client %s not found", key))
 	}
 
-	return value.(*minio.Client)
+	return value.(*minio.Core)
+}
+
+func IsHealth() (err error) {
+	globalClientMap.Range(func(key, value interface{}) bool {
+		client := value.(*minio.Core)
+		_, err = client.ListBuckets(context.Background())
+		if err != nil {
+			log.Errorf("minio health check failed, client key: %s", key)
+			return false
+		}
+
+		log.Infof("minio health check success, client key: %s", key)
+		return true
+	})
+
+	return err
 }

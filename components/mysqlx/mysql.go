@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/TremblingV5/box/components"
+	"github.com/go-kratos/kratos/v2/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"sync"
 	"time"
@@ -22,35 +22,23 @@ func GetConfig() components.ConfigMap[*Config] {
 	return globalConfigMap
 }
 
-func Init(cm components.ConfigMap[*Config]) error {
+func Init(cm components.ConfigMap[*Config]) (func() error, error) {
 	globalConfigMap = cm
 
 	for k, v := range cm {
 		db, err := Connect(v)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		globalClientMap.Store(k, db)
 	}
 
-	return nil
+	return IsHealth, nil
 }
 
 func Connect(c *Config) (*gorm.DB, error) {
-	var level logger.LogLevel
-
-	if c.Debug {
-		level = logger.Info
-	} else {
-		level = logger.Warn
-	}
-
-	if c.NoLog {
-		level = logger.Silent
-	}
-
 	c.SetDefault()
 	originDB, err := sql.Open("mysql", c.ToDSN())
 	if err != nil {
@@ -79,7 +67,6 @@ func Connect(c *Config) (*gorm.DB, error) {
 	})
 
 	return gorm.Open(dialector, &gorm.Config{
-		Logger: newLoggerAdaptor().LogMode(level),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
@@ -103,4 +90,25 @@ func GetDBClient(ctx context.Context, keys ...string) *gorm.DB {
 	}
 
 	return value.(*gorm.DB)
+}
+
+func IsHealth() (err error) {
+	globalClientMap.Range(func(key, value any) bool {
+		client := value.(*gorm.DB)
+		db, e := client.DB()
+		if e != nil {
+			err = e
+			return false
+		}
+
+		err = db.Ping()
+		if err != nil {
+			return false
+		}
+
+		log.Infof("mysql health check success, client key: %s", key)
+		return true
+	})
+
+	return err
 }

@@ -1,24 +1,32 @@
 package components
 
-import "github.com/TremblingV5/box/configx"
+import "github.com/go-kratos/kratos/v2/config"
 
 type ConfigMap[T any] map[string]T
 
 type Component[T any] struct {
-	err        error
-	cfg        ConfigMap[T]
-	initMethod func(cfg ConfigMap[T]) error
+	err         error
+	configValue map[string]config.Value
+	cfg         ConfigMap[T]
+	initMethod  func(cfg ConfigMap[T]) (func() error, error)
 }
 
-func Load[T any](storeKey, configKey string, initMethod func(cfg ConfigMap[T]) error) *Component[T] {
-	c := &Component[T]{
-		initMethod: initMethod,
+func Load[T any](configValue map[string]config.Value, initMethod func(cfg ConfigMap[*T]) (func() error, error)) (t *T, components *Component[*T]) {
+	c := &Component[*T]{
+		initMethod:  initMethod,
+		configValue: configValue,
 	}
 
-	err := configx.GetStore(storeKey).UnmarshalKey(configKey, &c.cfg)
-	c.err = err
+	c.cfg = make(ConfigMap[*T])
+	for key, value := range configValue {
+		t = new(T)
+		if err := value.Scan(t); err != nil {
+			panic("scan component config error: " + err.Error())
+		}
+		c.cfg[key] = t
+	}
 
-	return c
+	return t, c
 }
 
 func (s *Component[T]) Start() error {
@@ -26,7 +34,12 @@ func (s *Component[T]) Start() error {
 		return s.err
 	}
 
-	return s.initMethod(s.cfg)
+	healthCheckMethod, err := s.initMethod(s.cfg)
+	if err != nil {
+		return err
+	}
+
+	return healthCheckMethod()
 }
 
 func (s *Component[T]) GetConfig() ConfigMap[T] {
