@@ -5,7 +5,6 @@ import (
 	"github.com/TremblingV5/box/components"
 	"github.com/TremblingV5/box/components/consulx"
 	"github.com/TremblingV5/box/components/etcdx"
-	"github.com/TremblingV5/box/components/miniox"
 	"github.com/TremblingV5/box/components/mysqlx"
 	"github.com/TremblingV5/box/components/redisx"
 	"github.com/TremblingV5/box/components/rmqconsumerx"
@@ -42,8 +41,8 @@ func launchWrapper(cfg config.Value, componentsName string) {
 		launchComponent(cfg, mysqlx.Init)
 	case "redis":
 		launchComponent(cfg, redisx.Init)
-	case "minio":
-		launchComponent(cfg, miniox.Init)
+	//case "minio":
+	//launchComponent(cfg, miniox.Init)
 	case "etcd":
 		launchComponent(cfg, etcdx.Init)
 	case "consul":
