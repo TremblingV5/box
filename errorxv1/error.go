@@ -1,4 +1,4 @@
-package errorx
+package errorxv1
 
 import (
 	"context"

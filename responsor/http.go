@@ -1,7 +1,7 @@
 package responsor
 
 import (
-	"github.com/TremblingV5/box/errorx"
+	"github.com/TremblingV5/box/errorxv1"
 	"net/http"
 )
 
@@ -68,7 +68,7 @@ func HttpSuccessWithData(c GinHertzContext, data any) {
 }
 
 func HttpWithErr(c GinHertzContext, err error) {
-	e := errorx.As(err)
+	e := errorxv1.As(err)
 	HttpResp(
 		c,
 		e.HttpCode,

@@ -18,7 +18,7 @@ In another word, it is a `toolbox` or `glue` for golang app.
   - [redisx](./components/redisx/README.md)
 - [configx](./configx/README.md)
 - [dbtx](./dbtx/README.md)
-- [errorx](./errorx/README.md)
+- [errorx](errorxv1/README.md)
 - [gofer](./gofer/README.md)
 - [httpserver](./httpserver/README.md)
 - [launcher](./launcher/README.md)
