@@ -12,6 +12,7 @@ import (
 
 var DB *gorm.DB
 
+// TestEntity represents a test database entity
 type TestEntity struct {
 	Id   int64
 	Name string
@@ -38,6 +39,7 @@ func serviceMethod(ctx context.Context) (err error) {
 	return errors.New("some error")
 }
 
+// init initializes the database connection
 func init() {
 	dsn := "user:pass@tcp(127.0.0.1:3306)/test_entity?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn))
@@ -47,6 +49,7 @@ func init() {
 	DB = db
 }
 
+// main executes the service method to demonstrate transaction rollback
 func main() {
 	err := serviceMethod(context.Background())
 	log.Println(err)

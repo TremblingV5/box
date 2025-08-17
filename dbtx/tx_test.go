@@ -9,6 +9,7 @@ import (
 )
 
 // Test_WithTx tests WithTx function
+// It verifies that a transaction can be properly bound to a context
 func Test_WithTx(t *testing.T) {
 	t.Run("WithTx should bind a tx to the context", func(t *testing.T) {
 		tx := &MockTX{}
@@ -20,6 +21,7 @@ func Test_WithTx(t *testing.T) {
 }
 
 // Test_Tx tests Tx function
+// It verifies that a transaction can be properly retrieved from a context
 func Test_Tx(t *testing.T) {
 	t.Run("Tx should get and return the tx from the context", func(t *testing.T) {
 		tx := &MockTX{}
@@ -47,6 +49,8 @@ func Test_Tx(t *testing.T) {
 	})
 }
 
+// Test_doCheckTx tests the doCheckTx function
+// It verifies transaction handling in various scenarios
 func Test_doCheckTx(t *testing.T) {
 	tx := NewMockTX(gomock.NewController(t))
 
@@ -95,6 +99,8 @@ func Test_doCheckTx(t *testing.T) {
 	})
 }
 
+// Test_persist tests the persist function
+// It verifies transaction commit and rollback behavior
 func Test_persist(t *testing.T) {
 	tx := NewMockTX(gomock.NewController(t))
 
@@ -141,6 +147,8 @@ func Test_persist(t *testing.T) {
 	})
 }
 
+// Test_WithTXPersist tests the WithTXPersist function
+// It verifies that transaction persistence works correctly
 func Test_WithTXPersist(t *testing.T) {
 	tx := NewMockTX(gomock.NewController(t))
 
